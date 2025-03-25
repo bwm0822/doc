@@ -346,7 +346,7 @@ if full_response:
             <li>Vosk 的中文語言模型辨識率不是很好，有些字常常辨識錯誤，且無法辨識英文</li>
             <li>Ollama 的 gemma:2b 大語言模型很腦殘，常常答非所問</li>
             <li>Piper 的中文語音模型無法英文發音</li>
-            <li>ChatGPT 是很好的幫手，解決大多數的問題，節省了很多時間</li>
+            <li>ChatGPT 是非常有用的助手，幫我解決大多數的問題，節省了很多時間</li>
             <p><a href="https://www.youtube.com/watch?v=vESBf2Id66I" target="_blank">https://www.youtube.com/watch?v=vESBf2Id66I</a></p>
             <iframe width="560" height="315" src="https://www.youtube.com/embed/vESBf2Id66I" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </ol>
@@ -356,8 +356,47 @@ if full_response:
             <li><a href="https://ollama.com/">https://ollama.com/</a><br>
                 Ollama 是一個專注於本地運行 LLM（大型語言模型）的平台，讓使用者能夠在自己的電腦或伺服器上輕鬆下載、運行和管理 AI 模型，而不需要依賴雲端運算。它適合開發者、研究人員或對隱私有高度要求的應用場景。
             </li>
+            <pre></pre>
             <li><a href="https://huggingface.co/">https://huggingface.co/</a><br>
                 Hugging Face 是一個專注於自然語言處理（NLP）和機器學習（ML）的平台，提供多種工具，包括 Transformers 庫、模型託管、Datasets、Inference API 等。它廣泛用於開發和部署 AI 模型，特別是基於深度學習的語言模型，如 BERT、GPT、Llama 2 及其他大規模 Transformer 模型。
+            </li>
+            <pre></pre>
+            <li>大型語言模型概念
+                <div>「大型語言模型 7B、70B、175B」中的 B 代表 Billion（十億），
+                表示該模型的 參數數量（parameters），即模型內部的權重數量，
+                參數數量越多，模型的學習能力越強，但也需要更多的計算資源。
+                </div>
+                <table class="table table-bordered table-striped mt-3">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>參數數量</th>
+                            <th>規模分類</th>
+                            <th>特性</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2B（20 億參數）</td>
+                            <td>迷你 LLM</td>
+                            <td>在 Raspberry Pi、手機運行，適合嵌入式 AI 或邊緣設備，</td>
+                        </tr>
+                        <tr>
+                            <td>7B（70 億參數）</td>
+                            <td>小型 LLM</td>
+                            <td>可以在高端 PC 或筆電運行，適合本地部署</td>
+                        </tr>
+                        <tr>
+                            <td>70B（700 億參數）</td>
+                            <td>大型 LLM</td>
+                            <td>需要多張高階 GPU（如 A100），適合專業應用</td>
+                        </tr>
+                        <tr>
+                            <td>175B（1750 億參數）</td>
+                            <td>超大 LLM</td>
+                            <td>需要雲端運行（如 OpenAI GPT-3），理解能力最強</td>
+                        </tr>
+                    </tbody>
+                </table>
             </li>
             <li>有用的指令
                 <ul>
@@ -382,45 +421,6 @@ if full_response:
                     <li>來列出目前已經安裝在 Python 環境中的所有套件及其版本
                         <pre><code style="background-color: #f0f0f0;">pip list</code></pre>
                     </li>
-                </ul>
-            </li>
-            <li>大型語言模型概念
-                <ul>
-                    <div>「大型語言模型 7B、70B、175B」中的 B 代表 Billion（十億），
-                    表示該模型的 參數數量（parameters），即模型內部的權重數量，
-                    參數數量越多，模型的學習能力越強，但也需要更多的計算資源。
-                    </div>
-                    <table class="table table-bordered table-striped mt-3">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>參數數量</th>
-                                <th>規模分類</th>
-                                <th>特性</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>2B（20 億參數）</td>
-                                <td>迷你 LLM</td>
-                                <td>在 Raspberry Pi、手機運行，適合嵌入式 AI 或邊緣設備，</td>
-                            </tr>
-                            <tr>
-                                <td>7B（70 億參數）</td>
-                                <td>小型 LLM</td>
-                                <td>可以在高端 PC 或筆電運行，適合本地部署</td>
-                            </tr>
-                            <tr>
-                                <td>70B（700 億參數）</td>
-                                <td>大型 LLM</td>
-                                <td>需要多張高階 GPU（如 A100），適合專業應用</td>
-                            </tr>
-                            <tr>
-                                <td>175B（1750 億參數）</td>
-                                <td>超大 LLM</td>
-                                <td>需要雲端運行（如 OpenAI GPT-3），理解能力最強</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </ul>
             </li>
         </ol>
