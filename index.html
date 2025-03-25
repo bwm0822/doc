@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>語音聊天機器人</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <div class="container mt-5">
+        <h2 class="mb-4">用 Raspberry Pi 4 + ollama + vosk + piper 實現語音聊天機器人</h2>
+        <h3>1. 硬體需求</h3>
+        <ul>
+            <li>Raspberry Pi 4 / 4GB RAM</li>
+            <li>usb 麥克風</li>
+            <li>喇叭（3.5mm 音源輸入、usb 供電）</li>
+        </ul>
+        <h3>2. 設定 Raspberry Pi 4 的環境</h3>
+        <ol>
+            <li>燒錄 Raspberry OS 到 SD卡上
+                <ul>
+                    <li>到官網下載燒錄程式 <a href="https://www.raspberrypi.com/software/">https://www.raspberrypi.com/software/</a></li>
+                    <li>開啟燒錄程式，將 SD 卡插到讀卡機上
+                    <li>Device 選擇 RASPERRY PI 4</li>
+                    <li>作業系統 選擇 Raspberry Pi OS Lite(64-64)，這個版本沒有 Desktop Environment</li>
+                    <li>設定完後，點擊 NEXT，選擇 編輯設置</li>
+                    <li>到 GENERAL頁面，設定帳號、密碼、WIFI．．．等</li>
+                    <li>到 SERVICES 頁面，勾選 開啟 SSH 服務，這樣可以用 SSH 連線到 Pi4</li>
+                </ul>
+            </li>
+            <li>用 SSH 連線到 Pi4
+                <ul>
+                    <li>如果在燒錄 Raspberry OS 時，有設定 WIFI，開機後 Pi4 就會自動連上網路，如果沒有，也可以插上網路線連接網路</li>
+                    <li>取得 Pi4 的 IP
+                        <ol>
+                            <li>打開你的路由器管理介面（通常是 192.168.1.1 或 192.168.0.1）</li>
+                            <li>登入路由器（預設帳密通常寫在路由器背面）。</li>
+                            <li>查看「DHCP 客戶端列表」或「連接裝置」，找到 raspberrypi 或類似名稱的裝置。</li>
+                            <li>記下 Raspberry Pi 的 IP，然後你就可以用 SSH 連接</li>
+                        </ol>
+                    </li>
+                    <li>在 Windows 上執行 cmd，開啟 Terminal 視窗，輸入 ssh 帳號@Pi4的IP，就可以連線到 Pi4 了</li>
+                </ul>
+            </li>
+            <li>測試麥克風及喇叭
+                <ol>
+                    <li>插入麥克風及喇叭，ssh 連線到 Pi4</li>
+                    <li>檢查麥克風，arecord -l 會列出所有錄音設備，如有偵測到 usb 麥克風，就會出現在列表中
+                        <pre><code style="background-color: #f0f0f0;">arecord -l</code></pre>
+                    </li>
+                    <li>檢查播放設備，aplay -l 會列出所有播放設備
+                        <pre><code style="background-color: #f0f0f0;">aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
+    Subdevices: 8/8
+    Subdevice #0: subdevice #0
+    Subdevice #1: subdevice #1
+    Subdevice #2: subdevice #2
+    Subdevice #3: subdevice #3
+    Subdevice #4: subdevice #4
+    Subdevice #5: subdevice #5
+    Subdevice #6: subdevice #6
+    Subdevice #7: subdevice #7
+card 2: vc4hdmi0 [vc4-hdmi-0], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+card 3: vc4hdmi1 [vc4-hdmi-1], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0</code></pre>
+                    </li>
+                    <li>要測試喇叭及麥克風是否正常，有下列幾中方式
+                        <ul>
+                            <li>播放測試音效，測試喇叭左右聲道是否正常
+                                <pre><code style="background-color: #f0f0f0;">speaker-test -t sine -f 1000 -c 2</code></pre>
+                            </li>
+                            <li>輸入以下指令錄音 5 秒，指令中的 hw:1,0，請根據 arecord -l 的輸出修改(hw:card number,device number)
+                                <pre><code style="background-color: #f0f0f0;">arecord -D plughw:1,0 -f cd -t wav test.wav -d 5</code></pre>
+                            </li>
+                            <li>然後播放錄音檔：
+                                <pre><code style="background-color: #f0f0f0;">aplay test.wav</code></pre>
+                            </li>
+                            <li>即時監聽麥克風，對麥克風說話，看看喇叭有無聲音，指令中的 hw:1,0，請根據 arecord -l 的輸出修改(hw:card number,device number)
+                                <pre><code style="background-color: #f0f0f0;">arecord -D plughw:1,0 -f cd | aplay</code></pre>
+                            </li>
+                            <li>如果沒聽到聲音，請檢查喇叭、麥克風的接線有沒有接好，開關有沒有開啟，喇叭音量是否調到最低或靜音</li>
+                        </ul>
+                    </li>
+                </ol>
+            </li>
+        </ol>
+
+        <h3>3. 關於 Python</h3>
+        <ol>
+            <li>Raspberry OS 已經預裝 Python 了，所以不需要再安裝</li>
+            <pre></pre>
+            <li>檢查 Python 版本
+                <pre><code style="background-color: #f0f0f0;">python --version</code></pre>
+            </li>
+            <li>如果需要安裝或升級 Python
+                <pre><code style="background-color: #f0f0f0;">sudo apt update
+sudo apt install python3</code></pre>
+            </li>
+            <li>pip 用於安裝各種 Python 套件，先確認有無安裝 pip</li>
+            <li>檢查 pip 版本，如果沒有安裝 pip，會出現 command not found: pip
+                <pre><code style="background-color: #f0f0f0;">pip --version</code></pre>
+            </li>
+            <li>安裝 pip
+                <pre><code style="background-color: #f0f0f0;">sudo apt update
+sudo apt install python3-pip</code></pre>
+            </li>
+            <li>要安裝 python 套件時，要在專案目錄下創建一個 Python 虛擬環境</li>
+            <li>創建 Python 虛擬環境
+                <pre><code style="background-color: #f0f0f0;">python -m venv ./venv</code></pre>
+            </li>
+            <li>啟動 Python 虛擬環境
+                <pre><code style="background-color: #f0f0f0;">source ./venv/bin/activate</code></pre>
+            </li>
+            <li>關閉 Python 虛擬環境
+                <pre><code style="background-color: #f0f0f0;">deactivate</code></pre>
+            </li>
+            <li>為什麼使用虛擬環境？
+                <ul>
+                    <li>隔離：虛擬環境可以讓你為不同的專案創建獨立的 Python 環境，避免套件衝突。</li>
+                    <li>方便管理：你可以為每個專案安裝特定版本的套件，而不影響其他專案。</li>
+                    <li>更清晰的依賴管理：虛擬環境中只包含專案所需的套件。</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>4. 安裝 Ollama 大語言模型(LLM)</h3>
+        <ol>
+            <li>安裝大語言模型 ollama
+                <pre><code style="background-color: #f0f0f0;">curl -fsSL https://ollama.com/install.sh | sh</code></pre>
+            </li>
+            <li>跑 gemma:2b 模型
+                <pre><code style="background-color: #f0f0f0;">ollama run gemma:2b</code></pre>
+                第一次執行時，會同時下載模型，如果成功，此時就可以跟模型對話了
+            </li>
+            <li>ollama list 可列出已經下載的 ollama 模型
+                <pre><code style="background-color: #f0f0f0;">ollama list
+NAME               ID              SIZE      MODIFIED
+gemma:2b           b50d6c999e59    1.7 GB    2 days ago
+llama3.2:latest    a80c4f17acd5    2.0 GB    2 days ago
+llama3.2:3b        a80c4f17acd5    2.0 GB    2 days ago</code></pre>
+            </li>
+        </ol>
+
+        <h3>5. 安裝 Vosk 語音辨識套件(ASR)</h3>
+        <ol>
+            <li>安裝 vosk 套件
+                <pre><code style="background-color: #f0f0f0;">pip install vosk</code></pre>
+            </li>
+            <li>下載中文語言模型
+                <pre><code style="background-color: #f0f0f0;">mkdir vosk_models
+cd vosk_models
+wget https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip</code></pre>
+            </li>
+            <li>解壓縮 vosk-model-small-cn-0.22.zip
+                <pre><code style="background-color: #f0f0f0;">unzip vosk-model-small-cn-0.22.zip</code></pre>
+            </li>
+        </ol>
+
+        <h3>6. 安裝 Piper-Tts 語音合成套件</h3>
+        <ol>
+            <li>安裝 piper-tts 套件
+                <pre><code style="background-color: #f0f0f0;">pip install piper-tts</code></pre>
+            </li>
+            <li>下載中文語音模型及其json
+                <pre><code style="background-color: #f0f0f0;">mkdir piper_models
+cd piper_models
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx.json</code></pre>
+            </li>
+            <li>測試 piper 是否正常，如果正常，則跳過 4
+                <pre><code style="background-color: #f0f0f0;">piper --help
+Illegal instruction</code></pre>
+                出現 Illegal instruction，因為最新版的 onnxruntime 跟 Pi4 的硬體相衝突，要降版本<br>
+                執行 pip show onnxruntime，會顯示 onnxruntime 套件的詳細資訊，包括其版本、安裝位置、依賴套件等<br>
+                執行 pip index versions onnxruntime，會顯示可用的套件版本
+            </li>
+            <pre></pre>
+            <li>解決 onnxruntime 與硬體相衝突的問題
+                <ol>
+                    <li>將 onnxruntime 版本降到 1.17.1
+                        <pre><code style="background-color: #f0f0f0;">pip uninstall onnxruntime -y
+pip install onnxruntime==1.17.1</code></pre>
+                    </li>
+                    <li>onnxruntime 版本降到 1.17.1後，執行 piper --help 會出現問題，這是因為跟 numpy 的版本相衝突，需要將 numpy 降版本</li>
+                    <li>將 numpy 版本降到 1.24.4
+                        <pre><code style="background-color: #f0f0f0;">pip uninstall numpy -y
+pip install numpy==1.24.4</code></pre>
+                    </li>
+                </ol>
+            </li>
+            <li>測試 piper 語音合成是否正常
+                <pre><code style="background-color: #f0f0f0;">echo '這是測試' | \
+piper --model piper_models/zh_CN-huayan-medium.onnx --output-raw | \
+aplay -r 22050 -f S16_LE -t raw -</code></pre>
+                如果可以聽到"這是測試"，就表示 piper 可以正常工作
+            </li>
+        </ol>
+
+        <h3>7. 安裝其他需要的 python 套件</h3>
+        <ol>
+            <li>安裝 sounddevice，用來撥放語音
+                <pre><code style="background-color: #f0f0f0;">pip install sounddevice</code></pre>
+            </li>
+            <li>安裝 pyaudio，用來錄音
+                <pre><code style="background-color: #f0f0f0;">pip install pyaudio</code></pre>
+            </li>
+            <li>安裝 Ollama 的 Python API，讓 Python 程式可以透過 ollama API與 Ollama 互動
+                <pre><code style="background-color: #f0f0f0;">pip install ollama</code></pre>
+            </li>
+            <li>安裝 opencc，將簡體字轉成繁體字
+                <pre><code style="background-color: #f0f0f0;">pip install opencc-python-reimplemented</code></pre>
+            </li>
+        </ol>
+
+        <h3>8. Python 語音聊天程式</h3>
+        <ul>
+            <li>程式主要流程如下:
+                <ol>
+                    <li>pyaudio 透過麥克風將使用者的聲音轉成 audio stream</li>
+                    <li>Vosk 將 audio stream 轉成 text</li>
+                    <li>將 text 輸入大語言模型(LLM)，生成文字</li>
+                    <li>Piper 將 LLM 生成的文字轉成語音存到 wav 檔</li>
+                    <li>sounddevice 播放語音 wav 檔</li>
+                </ol>
+            </li>
+            <li>程式碼如下:
+            <pre><code style="background-color: #f0f0f0;">import vosk
+import pyaudio
+import numpy as np
+import ollama
+import json
+import wave
+from piper.voice import PiperVoice
+import sounddevice as sd
+#import time
+from opencc import OpenCC
+
+# 將 Text 轉成語音輸出
+def text_to_speech(text, output_wav="output.wav"):
+# 轉換文字為語音
+text = text.replace("，", "").replace("。", "").replace("！", "").replace("？", "").replace("；", "").replace("：", "").replace("*", "")
+with wave.open(output_wav, "wb") as wav_file:
+    wav_file.setnchannels(1)  # 單聲道
+    wav_file.setsampwidth(2)  # 16-bit
+    wav_file.setframerate(22050)  # 取樣率
+    voice.synthesize(text, wav_file)  # 產生語音
+
+# 用 `sounddevice` 播放 `.wav`
+with wave.open(output_wav, "rb") as wf:
+    sample_rate = wf.getframerate()  # 取得採樣率
+    audio_data = wf.readframes(wf.getnframes())  # 讀取所有音訊幀
+
+# 轉換成 NumPy 陣列並播放
+audio_array = np.frombuffer(audio_data, dtype=np.int16)
+#time.sleep(0.25)  # 等待緩衝區填滿
+#緩衝區 blocksize 要設成 2048，如果設太小如 1024，聲音會斷斷續續，出現 ALSA lib pcm.c:8570:(snd_pcm_recover) underrun occurred
+sd.play(audio_array, samplerate=sample_rate, blocksize=2048, latency='low')
+sd.wait()  # 等待播放完成
+
+# 將簡體中文轉換為繁體中文
+def convert_to_traditional_chinese(text):
+cc = OpenCC('s2t')  # Simplified to Traditional
+return cc.convert(text) 
+
+# 關閉 Vosk debug output
+vosk.SetLogLevel(-1)
+
+# 載入 Vosk 模型
+print("載入 Vosk 模型...")
+VOSK_MODEL_PATH = "vosk_models/vosk-model-small-cn-0.22"
+model = vosk.Model(VOSK_MODEL_PATH)
+rec = vosk.KaldiRecognizer(model, 16000)
+
+# 載入 Piper 模型
+print("載入 Piper 模型...")
+PIPER_MODEL_PATH = "piper_models/zh_CN-huayan-medium.onnx"
+voice = PiperVoice.load(PIPER_MODEL_PATH)
+
+# 載入 Ollama 模型
+print("載入 Ollama 模型...")
+OLLAMA_MODEL_NAME = "gemma:2b"
+response = ollama.chat(model=OLLAMA_MODEL_NAME, messages=[{"role": "system", "content": "你是我的性感女僕，用繁體中文顯示，並帶著挑逗的語氣回答問題。"}], stream=False)
+print(response)
+
+# 初始化 PyAudio
+audio = pyaudio.PyAudio()
+
+# 播放歡迎語音
+print("\n帥氣的主人好，我是你的女僕！\n")
+text_to_speech("帥氣的主人好，我是你的女僕！")
+
+# 主循環
+while True:
+print("\n帥氣的主人請說...\n")
+text_to_speech("帥氣的主人請說...")
+stream = audio.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4096)
+stream.start_stream()
+
+while True:
+    data = stream.read(4096, exception_on_overflow=False)
+    if rec.AcceptWaveform(data):
+        result = json.loads(rec.Result())
+        if result["text"] != "":
+            result["text"] = convert_to_traditional_chinese(result["text"])
+            break
+    # else:
+    #     partial_result = rec.PartialResult()
+    #     print('2:', partial_result)
+stream.stop_stream()
+stream.close()
+
+print("\n你說:\n", result["text"])
+if "離開" in result["text"]:
+    print("\n再見了，我帥氣的主人！")
+    text_to_speech("再見了，我帥氣的主人！")
+    break
+# Collect more text before streaming
+messages = [{"role": "user", "content": result["text"]}]
+response = ollama.chat(model=OLLAMA_MODEL_NAME, messages=messages, stream=True)
+print("\n女僕 回應:\n")
+full_response = ""
+for chunk in response:
+    chunk['message']["content"] = convert_to_traditional_chinese(chunk['message']["content"])
+    print(chunk['message']["content"], end='', flush=True)
+    # Collect the response in chunks
+    full_response += chunk['message']["content"]
+    if "\n" in full_response or any(p in full_response for p in "，。！？；："):
+        text_to_speech(full_response.strip())
+        full_response = ""
+if full_response:
+    print('\n')
+    text_to_speech(full_response.strip())</code></pre>
+            </li>
+        </ul>
+
+        <h3>9. 實機操作範例與心得</h3>
+        <ol>
+            <li>聊天機器人在 Pi4 上執行的效能還算可以接受</li>
+            <li>Vosk 的中文語言模型辨識率不是很好，有些字常常辨識錯誤，且無法辨識英文</li>
+            <li>Ollama 的 gemma:2b 大語言模型很腦殘，常常答非所問</li>
+            <li>Piper 的中文語音模型無法英文發音</li>
+            <li>ChatGPT 是很好的幫手，解決大多數的問題，節省了很多時間</li>
+            <p><a href="https://www.youtube.com/watch?v=vESBf2Id66I" target="_blank">https://www.youtube.com/watch?v=vESBf2Id66I</a></p>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/vESBf2Id66I" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </ol>
+
+        <h3>10. 附錄</h3>
+        <ol>
+            <li><a href="https://ollama.com/">https://ollama.com/</a><br>
+                Ollama 是一個專注於本地運行 LLM（大型語言模型）的平台，讓使用者能夠在自己的電腦或伺服器上輕鬆下載、運行和管理 AI 模型，而不需要依賴雲端運算。它適合開發者、研究人員或對隱私有高度要求的應用場景。
+            </li>
+            <li><a href="https://huggingface.co/">https://huggingface.co/</a><br>
+                Hugging Face 是一個專注於自然語言處理（NLP）和機器學習（ML）的平台，提供多種工具，包括 Transformers 庫、模型託管、Datasets、Inference API 等。它廣泛用於開發和部署 AI 模型，特別是基於深度學習的語言模型，如 BERT、GPT、Llama 2 及其他大規模 Transformer 模型。
+            </li>
+            <li>有用的指令
+                <ul>
+                    <li>scp（Secure Copy Protocol）是一個基於 SSH（Secure Shell）的安全檔案傳輸工具，允許你在本地與遠端伺服器之間傳輸檔案或目錄。
+                        <pre><code style="background-color: #f0f0f0;">scp file.txt user@remote_host:/path/to/destination/</code></pre>
+                    </li>
+                    <li>查看整體磁碟空間 (df)
+                        <pre><code style="background-color: #f0f0f0;">df -h</code></pre>
+                    </li>
+                    <li>查看目錄空間
+                        <pre><code style="background-color: #f0f0f0;">du -sh 路徑</code></pre>
+                    </li>
+                    <li>顯示 python 套件的詳細資訊
+                        <pre><code style="background-color: #f0f0f0;">pip show 套件名稱</code></pre>
+                    </li>
+                    <li>安裝特定版本的 python 套件
+                        <pre><code style="background-color: #f0f0f0;">pip install 套件名稱==版本號碼</code></pre>
+                    </li>
+                    <li>查詢 python 套件可用的版本
+                        <pre><code style="background-color: #f0f0f0;">pip index versions 套件名稱</code></pre>
+                    </li>
+                    <li>來列出目前已經安裝在 Python 環境中的所有套件及其版本
+                        <pre><code style="background-color: #f0f0f0;">pip list</code></pre>
+                    </li>
+                </ul>
+            </li>
+            <li>大型語言模型概念
+                <ul>
+                    <div>「大型語言模型 7B、70B、175B」中的 B 代表 Billion（十億），
+                    表示該模型的 參數數量（parameters），即模型內部的權重數量，
+                    參數數量越多，模型的學習能力越強，但也需要更多的計算資源。
+                    </div>
+                    <table class="table table-bordered table-striped mt-3">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>參數數量</th>
+                                <th>規模分類</th>
+                                <th>特性</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2B（20 億參數）</td>
+                                <td>迷你 LLM</td>
+                                <td>在 Raspberry Pi、手機運行，適合嵌入式 AI 或邊緣設備，</td>
+                            </tr>
+                            <tr>
+                                <td>7B（70 億參數）</td>
+                                <td>小型 LLM</td>
+                                <td>可以在高端 PC 或筆電運行，適合本地部署</td>
+                            </tr>
+                            <tr>
+                                <td>70B（700 億參數）</td>
+                                <td>大型 LLM</td>
+                                <td>需要多張高階 GPU（如 A100），適合專業應用</td>
+                            </tr>
+                            <tr>
+                                <td>175B（1750 億參數）</td>
+                                <td>超大 LLM</td>
+                                <td>需要雲端運行（如 OpenAI GPT-3），理解能力最強</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ul>
+            </li>
+        </ol>
+    </div>
+</body>
+</html>
+
+
+

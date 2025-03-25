@@ -1,0 +1,14 @@
+在樹莓派4上實作LLM語音聊天機器人
+
+
+用 Raspberry Pi 4 + ollama + vosk + piper 實現語音聊天機器人
+硬體需求:
+    1. Raspberry Pi 4 / 4GB 
+    2. usb 麥克風
+    3. usb 供電，3.5mm音源輸入喇叭
+
+
+讀取 doc.txt的內容，轉成html格式，用bootstrap美化，並存成index.html
+
+
+將index.html的內容轉成html格式，並用bootstrap美化

@@ -1,0 +1,206 @@
+
+用 Raspberry Pi 4 + ollama + vosk + piper 實現語音聊天機器人
+
+1.硬體需求
+    1.Raspberry Pi 4 / 4GB RAM
+    2.usb 麥克風
+    3.3.5mm 音源輸入的喇叭，usb 供電 
+
+2.設定 Raspberry Pi 4 的環境
+    1.燒錄 Raspberry OS 到 SD卡上
+        到官網下載燒錄程式 https://www.raspberrypi.com/software/
+        開啟燒錄程式，將 SD 卡插到讀卡機上，Device 選擇 RASPERRY PI 4，
+        作業系統 選擇 Raspberry Pi OS Lite(64-64)，這個版本沒有 Desktop Environment，
+        設定完後，點擊 NEXT，選擇 編輯設置，
+        到 GENERAL頁面，設定帳號、密碼、WIFI...等
+        到 SERVICES 頁面，勾選 開啟 SSH 服務，這樣可以用 SSH 連線到 Pi4
+    
+    2.用 SSH 連線到 Pi4
+        1.如果在燒錄 Raspberry OS 時，有設定 WIFI，開機後 Pi4 就會自動連上網路，如果沒有，也可以插上網路線連接網路。
+        2.取得 Pi4 的 IP
+            1.打開你的路由器管理介面（通常是 192.168.1.1 或 192.168.0.1）。
+            2.登入路由器（預設帳密通常寫在路由器背面）。
+            3.查看「DHCP 客戶端列表」或「連接裝置」，找到 raspberrypi 或類似名稱的裝置。
+            4.記下 Raspberry Pi 的 IP，然後你就可以用 SSH 連接
+        2.在 Windows 上執行 cmd，開啟 Terminal 視窗，輸入 ssh 帳號@Pi4的IP，就可以連線到 Pi4 了
+
+    3.測試麥克風及喇叭
+        1.插入麥克風及喇叭，ssh 連線到 Pi4
+        2.檢查麥克風，arecord -l 會列出所有錄音設備，如有偵測到 usb 麥克風，就會出現在列表中
+            arecord -l
+            **** List of CAPTURE Hardware Devices ****
+            card 1: USB [WordForum USB], device 0: USB Audio [USB Audio]
+                Subdevices: 1/1
+                Subdevice #0: subdevice #0
+        3.檢查播放設備，aplay -l 會列出所有播放設備
+            aplay -l
+            **** List of PLAYBACK Hardware Devices ****
+            card 0: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
+                Subdevices: 8/8
+                Subdevice #0: subdevice #0
+                Subdevice #1: subdevice #1
+                Subdevice #2: subdevice #2
+                Subdevice #3: subdevice #3
+                Subdevice #4: subdevice #4
+                Subdevice #5: subdevice #5
+                Subdevice #6: subdevice #6
+                Subdevice #7: subdevice #7
+            card 2: vc4hdmi0 [vc4-hdmi-0], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+                Subdevices: 1/1
+                Subdevice #0: subdevice #0
+            card 3: vc4hdmi1 [vc4-hdmi-1], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+                Subdevices: 1/1
+                Subdevice #0: subdevice #0
+        4.要測試喇叭及麥克風是否正常，有下列幾中方式
+            1.播放測試音效，測試喇叭左右聲道是否正常
+                speaker-test -t sine -f 1000 -c 2
+            2.輸入以下指令錄音 5 秒，指令中的 hw:1,0，請根據 arecord -l 的輸出修改(hw:card number,device number)
+                arecord -D plughw:1,0 -f cd -t wav test.wav -d 5
+            3.然後播放錄音檔：
+                aplay test.wav
+            4.即時監聽麥克風，對麥克風說話，看看喇叭有無聲音，指令中的 hw:1,0，請根據 arecord -l 的輸出修改(hw:card number,device number)
+                arecord -D plughw:1,0 -f cd | aplay
+            5.如果沒聽到聲音，請檢查喇叭、麥克風的接線有沒有接好，開關有沒有開啟，喇叭音量是否調到最低或靜音
+
+3.關於 Python
+    1.Raspberry OS 已經預裝 Python 了，所以不需要再安裝
+    2.檢查 Python 版本
+        python --version
+    3.如果需要安裝或升級 Python
+        sudo apt update
+        sudo apt install python3
+    4.pip 用於安裝各種 Python 套件，先確認有無安裝 pip
+    5.檢查 pip 版本，如果沒有安裝 pip，會出現 command not found: pip
+        pip --version
+    6.安裝 pip
+        sudo apt update
+        sudo apt install python3-pip
+    7.要安裝 python 套件時，要在專案目錄下創建一個 Python 虛擬環境
+    8.創建 Python 虛擬環境
+        python -m venv ./venv
+    9.啟動 Python 虛擬環境
+        source ./venv/bin/activate
+    10.關閉 Python 虛擬環境
+        deactivate
+    11.為什麼使用虛擬環境？
+        1.隔離：虛擬環境可以讓你為不同的專案創建獨立的 Python 環境，避免套件衝突。
+        2.方便管理：你可以為每個專案安裝特定版本的套件，而不影響其他專案。
+        3.更清晰的依賴管理：虛擬環境中只包含專案所需的套件。
+
+4.安裝 Ollama 大語言模型(LLM)
+    1.安裝大語言模型 ollama
+        curl -fsSL https://ollama.com/install.sh  | sh
+
+    2.跑 gemma:2b 模型
+        ollama run gemma:2b
+        第一次執行時，會同時下載模型，如果成功，此時就可以跟模型對話了
+
+    3.ollama list 可列出已經下載的 ollama 模型
+        ollama list
+        NAME               ID              SIZE      MODIFIED
+        gemma:2b           b50d6c999e59    1.7 GB    2 days ago
+        llama3.2:latest    a80c4f17acd5    2.0 GB    2 days ago
+        llama3.2:3b        a80c4f17acd5    2.0 GB    2 days ago
+
+5.安裝 Vosk 語音辨識套件(ASR) 
+    1.安裝 vosk 套件
+        pip install vosk
+    2.下載中文語言模型
+        mkdir vosk_models
+        cd vosk_models
+        wget https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip
+    3.解壓縮 vosk-model-small-cn-0.22.zip
+        unzip vosk-model-small-cn-0.22.zip
+
+6.安裝 Piper-Tts 語音合成套件
+    1.安裝 piper-tts 套件
+        pip install piper-tts
+    2.下載中文語音模型及其json
+        mkdir piper_models
+        cd piper_models
+        wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx
+        wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx.json
+    3.測試 piper 是否正常，如果正常，則跳過 4
+        piper --help
+        Illegal instruction
+        出現 Illegal instruction，因為最新版的 onnxruntime 跟 Pi4 的硬體相衝突，要降版本
+        執行 pip show onnxruntime，會顯示 onnxruntime 套件的詳細資訊，包括其版本、安裝位置、依賴套件等
+        執行 pip index versions onnxruntime，會顯示可用的套件版本
+    4.解決 onnxruntime 與硬體相衝突的問題
+        1.將 onnxruntime 版本降到 1.17.1
+            pip uninstall onnxruntime -y
+            pip install onnxruntime==1.17.1
+        2.onnxruntime 版本降到 1.17.1後，執行 piper --help 會出現問題，這是因為跟 numpy 的版本相衝突，需要將 numpy 降版本
+        3.將 numpy 版本降到 1.24.4
+            pip uninstall numpy -y
+            pip install numpy==1.24.4
+    5.測試 piper 語音合成是否正常
+        echo '這是測試' | \
+        piper --model piper_models/zh_CN-huayan-medium.onnx --output-raw | \
+        aplay -r 22050 -f S16_LE -t raw -
+        如果可以聽到"這是測試"，就表示 piper 可以正常工作
+
+7.安裝其他需要的 python 套件
+    1.安裝 sounddevice，用來撥放語音
+        pip install sounddevice
+    2.安裝 pyaudio，用來錄音
+        pip install pyaudio
+    3.安裝 Ollama 的 Python API，讓 Python 程式可以透過 ollama API與 Ollama 互動
+        pip install ollama
+    4.安裝 opencc，將簡體字轉成繁體字
+        pip install opencc-python-reimplemented
+
+8.Python 語音聊天程式
+    1.程式主要流程如下:
+        1.pyaudio 透過麥克風將使用者的聲音轉成 audio stream
+        2.Vosk 將 audio stream 轉成 text
+        3.將 text 輸入大語言模型(LLM)，生成文字
+        4.Piper 將 LLM 生成的文字轉成語音存到 wav 檔
+        5.sounddevice 播放語音 wav 檔
+    2.貼上 chat.py 的 code
+
+9.實機操作範例與心得
+    1.聊天機器人在 Pi4 上執行的效能還算可以接受
+    2.ChatGPT 是很好的幫手，可以解決大多數的問題，節省了很多時間
+    3.缺點 
+        1.Vosk 的中文語言模型的辨識率不是很好，有些字常常辨識錯誤，且無法辨識英文
+        2.Ollama 的 gemma:2b 大語言模型很腦殘，常常答非所問
+        3.Piper 的中文語音模型無法英文發音
+    https://youtu.be/vESBf2Id66I
+
+10. 附錄
+    1.https://ollama.com/
+        Ollama 是一個專注於本地運行 LLM（大型語言模型）的平台，讓使用者能夠在自己的電腦或伺服器上輕鬆下載、運行和管理 AI 模型，而不需要依賴雲端運算。它適合開發者、研究人員或對隱私有高度要求的應用場景。
+    2.https://huggingface.co/
+        Hugging Face 是一個專注於自然語言處理（NLP）和機器學習（ML）的平台，提供多種工具，包括 Transformers 庫、模型託管、Datasets、Inference API 等。它廣泛用於開發和部署 AI 模型，特別是基於深度學習的語言模型，如 BERT、GPT、Llama 2 及其他大規模 Transformer 模型。
+    3.有用的指令
+        1.scp（Secure Copy Protocol）是一個基於 SSH（Secure Shell）的安全檔案傳輸工具，允許你在本地與遠端伺服器之間傳輸檔案或目錄。
+            scp file.txt user@remote_host:/path/to/destination/
+        2.查看整體磁碟空間 (df)
+            df -h
+        3.查看目錄空間
+            du -sh 路徑
+        4.顯示 python 套件的詳細資訊
+            pip show 套件名稱
+        5.安裝特定版本的 python 套件
+            pip install 套件名稱==版本號碼
+        6.查詢 python 套件可用的版本
+            pip index versions 套件名稱
+        7.來列出目前已經安裝在 Python 環境中的所有套件及其版本
+            pip list
+
+
+「大型語言模型 7B、70B、175B」中的 B 代表 Billion（十億），
+表示該模型的 參數數量（parameters），即模型內部的權重數量，
+這些參數決定模型的學習與推理能力。
+(7B 即代表有 70 億參數)
+
+參數數量越多，模型的學習能力越強，但也需要更多的計算資源。以下是不同規模的模型特性：
+參數數量	        規模分類	特性
+7B（70 億參數）	    小型 LLM	可以在高端 PC 或筆電運行，適合本地部署
+70B（700 億參數）	大型 LLM	需要多張高階 GPU（如 A100），適合專業應用
+175B（1750 億參數）	超大 LLM	需要雲端運行（如 OpenAI GPT-3），理解能力最強
+
+
+
+
