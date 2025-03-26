@@ -40,7 +40,7 @@
                             <li>打開你的路由器管理介面（通常是 192.168.1.1 或 192.168.0.1）</li>
                             <li>登入路由器（預設帳密通常寫在路由器背面）。</li>
                             <li>查看「DHCP 客戶端列表」或「連接裝置」，找到 raspberrypi 或類似名稱的裝置。</li>
-                            <li>記下 Raspberry Pi 的 IP，然後你就可以用 SSH 連接</li>
+                            <li>記下 Pi4 的 IP</li>
                         </ol>
                     </li>
                     <li>在 Windows 上執行 cmd，開啟 Terminal 視窗，輸入 ssh 帳號@Pi4的IP，就可以連線到 Pi4 了</li>
@@ -49,8 +49,12 @@
             <li>測試麥克風及喇叭
                 <ol>
                     <li>插入麥克風及喇叭，ssh 連線到 Pi4</li>
-                    <li>檢查麥克風，arecord -l 會列出所有錄音設備，如有偵測到 usb 麥克風，就會出現在列表中
-                        <pre><code style="background-color: #f0f0f0;">arecord -l</code></pre>
+                    <li>檢查麥克風，輸入 arecord -l 會列出所有錄音設備，如有偵測到 usb 麥克風，就會出現在列表中
+                        <pre><code style="background-color: #f0f0f0;">arecord -l
+**** List of CAPTURE Hardware Devices ****
+card 1: USB [WordForum USB], device 0: USB Audio [USB Audio]
+Subdevices: 1/1
+Subdevice #0: subdevice #0</code></pre>
                     </li>
                     <li>檢查播放設備，aplay -l 會列出所有播放設備
                         <pre><code style="background-color: #f0f0f0;">aplay -l
@@ -147,6 +151,12 @@ gemma:2b           b50d6c999e59    1.7 GB    2 days ago
 llama3.2:latest    a80c4f17acd5    2.0 GB    2 days ago
 llama3.2:3b        a80c4f17acd5    2.0 GB    2 days ago</code></pre>
             </li>
+            <li>下載 ollama 模型
+                <pre><code style="background-color: #f0f0f0;">ollama pull 模型名稱</code></pre>
+            </li>
+            <li>刪除 ollama 模型
+                <pre><code style="background-color: #f0f0f0;">ollama rm 模型名稱</code></pre>
+            </li>
         </ol>
 
         <h3>5. 安裝 Vosk 語音辨識套件(ASR)</h3>
@@ -164,7 +174,7 @@ wget https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip</code></pr
             </li>
         </ol>
 
-        <h3>6. 安裝 Piper-Tts 語音合成套件</h3>
+        <h3>6. 安裝 Piper-TTS 語音合成套件</h3>
         <ol>
             <li>安裝 piper-tts 套件
                 <pre><code style="background-color: #f0f0f0;">pip install piper-tts</code></pre>
@@ -175,12 +185,27 @@ cd piper_models
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx.json</code></pre>
             </li>
-            <li>測試 piper 是否正常，如果正常，則跳過 4
-                <pre><code style="background-color: #f0f0f0;">piper --help
+            <li>測試 piper 是否正常
+                <ul>
+                    <li>執行 piper --help 看看 piper 是否正常，如果正常，則跳過 4
+                    <pre><code style="background-color: #f0f0f0;">piper --help
 Illegal instruction</code></pre>
-                出現 Illegal instruction，因為最新版的 onnxruntime 跟 Pi4 的硬體相衝突，要降版本<br>
-                執行 pip show onnxruntime，會顯示 onnxruntime 套件的詳細資訊，包括其版本、安裝位置、依賴套件等<br>
-                執行 pip index versions onnxruntime，會顯示可用的套件版本
+                    出現 Illegal instruction，因為最新版的 onnxruntime 跟 Pi4 的硬體相衝突，要降版本<br>
+                    <li>執行 pip show onnxruntime，會顯示 onnxruntime 套件的詳細資訊，包括其版本、安裝位置、依賴套件等<br>
+                    <pre><code style="background-color: #f0f0f0;">pip show onnxruntime
+Name: onnxruntime
+Version: 1.21.0
+Summary: ONNX Runtime is a runtime accelerator for Machine Learning models
+Home-page: https://onnxruntime.ai
+Author: Microsoft Corporation
+Author-email: onnxruntime@microsoft.com
+License: MIT License
+Location: /home/bwm08/projects/t1/venv/lib/python3.11/site-packages
+Requires: coloredlogs, flatbuffers, numpy, packaging, protobuf, sympy
+Required-by: piper-tts</code></pre>
+                    </li>
+                    <li>執行 pip index versions onnxruntime，會顯示可用的套件版本</li>
+                </ul>
             </li>
             <pre></pre>
             <li>解決 onnxruntime 與硬體相衝突的問題
@@ -402,7 +427,7 @@ if full_response:
             <li>有用的指令
                 <ul>
                     <li>scp（Secure Copy Protocol）是一個基於 SSH（Secure Shell）的安全檔案傳輸工具，允許你在本地與遠端伺服器之間傳輸檔案或目錄。
-                        <pre><code style="background-color: #f0f0f0;">scp file.txt user@remote_host:/path/to/destination/</code></pre>
+                        <pre><code style="background-color: #f0f0f0;">scp file_name user@remote_host:/path/to/destination/</code></pre>
                     </li>
                     <li>查看整體磁碟空間 (df)
                         <pre><code style="background-color: #f0f0f0;">df -h</code></pre>
