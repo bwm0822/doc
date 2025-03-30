@@ -51,45 +51,45 @@
                 <ol>
                     <li>插入麥克風及喇叭，ssh 連線到 Pi4</li>
                     <li>檢查麥克風，輸入 arecord -l 會列出所有錄音設備，如有偵測到 usb 麥克風，就會出現在列表中
-                        <pre><code style="background-color: #f0f0f0;">arecord -l
-**** List of CAPTURE Hardware Devices ****
+                        <pre><code style="background-color: #d0d0d0;">arecord -l</code></pre>
+                        <pre><code style="background-color: #f0f0f0;">**** List of CAPTURE Hardware Devices ****
 card 1: USB [WordForum USB], device 0: USB Audio [USB Audio]
 Subdevices: 1/1
 Subdevice #0: subdevice #0</code></pre>
                     </li>
                     <li>檢查播放設備，aplay -l 會列出所有播放設備
-                        <pre><code style="background-color: #f0f0f0;">aplay -l
-**** List of PLAYBACK Hardware Devices ****
-card 0: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
-    Subdevices: 8/8
-    Subdevice #0: subdevice #0
-    Subdevice #1: subdevice #1
-    Subdevice #2: subdevice #2
-    Subdevice #3: subdevice #3
-    Subdevice #4: subdevice #4
-    Subdevice #5: subdevice #5
-    Subdevice #6: subdevice #6
-    Subdevice #7: subdevice #7
-card 2: vc4hdmi0 [vc4-hdmi-0], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
-    Subdevices: 1/1
-    Subdevice #0: subdevice #0
-card 3: vc4hdmi1 [vc4-hdmi-1], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
-    Subdevices: 1/1
-    Subdevice #0: subdevice #0</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">aplay -l</code></pre>
+                        <pre><code style="background-color: #f0f0f0;">**** List of PLAYBACK Hardware Devices ****
+        card 0: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
+            Subdevices: 8/8
+            Subdevice #0: subdevice #0
+            Subdevice #1: subdevice #1
+            Subdevice #2: subdevice #2
+            Subdevice #3: subdevice #3
+            Subdevice #4: subdevice #4
+            Subdevice #5: subdevice #5
+            Subdevice #6: subdevice #6
+            Subdevice #7: subdevice #7
+        card 2: vc4hdmi0 [vc4-hdmi-0], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+            Subdevices: 1/1
+            Subdevice #0: subdevice #0
+        card 3: vc4hdmi1 [vc4-hdmi-1], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
+            Subdevices: 1/1
+            Subdevice #0: subdevice #0</code></pre>
                     </li>
                     <li>要測試喇叭及麥克風是否正常，有下列幾中方式
                         <ul>
                             <li>播放測試音效，測試喇叭左右聲道是否正常
-                                <pre><code style="background-color: #f0f0f0;">speaker-test -t sine -f 1000 -c 2</code></pre>
+                                <pre><code style="background-color: #d0d0d0;">speaker-test -t sine -f 1000 -c 2</code></pre>
                             </li>
                             <li>輸入以下指令錄音 5 秒，指令中的 hw:1,0，請根據 arecord -l 的輸出修改(hw:card number,device number)
-                                <pre><code style="background-color: #f0f0f0;">arecord -D plughw:1,0 -f cd -t wav test.wav -d 5</code></pre>
+                                <pre><code style="background-color: #d0d0d0;">arecord -D plughw:1,0 -f cd -t wav test.wav -d 5</code></pre>
                             </li>
                             <li>然後播放錄音檔：
-                                <pre><code style="background-color: #f0f0f0;">aplay test.wav</code></pre>
+                                <pre><code style="background-color: #d0d0d0;">aplay test.wav</code></pre>
                             </li>
                             <li>即時監聽麥克風，對麥克風說話，看看喇叭有無聲音，指令中的 hw:1,0，請根據 arecord -l 的輸出修改(hw:card number,device number)
-                                <pre><code style="background-color: #f0f0f0;">arecord -D plughw:1,0 -f cd | aplay</code></pre>
+                                <pre><code style="background-color: #d0d0d0;">arecord -D plughw:1,0 -f cd | aplay</code></pre>
                             </li>
                             <li>如果沒聽到聲音，請檢查喇叭、麥克風的接線有沒有接好，開關有沒有開啟，喇叭音量是否調到最低或靜音</li>
                         </ul>
@@ -103,29 +103,29 @@ card 3: vc4hdmi1 [vc4-hdmi-1], device 0: MAI PCM i2s-hifi-0 [MAI PCM i2s-hifi-0]
             <li>Raspberry OS 已經預裝 Python 了，所以不需要再安裝</li>
             <pre></pre>
             <li>檢查 Python 版本
-                <pre><code style="background-color: #f0f0f0;">python --version</code></pre>
+                <pre><code style="background-color: #d0d0d0;">python --version</code></pre>
             </li>
             <li>如果需要安裝或升級 Python
-                <pre><code style="background-color: #f0f0f0;">sudo apt update
+                <pre><code style="background-color: #d0d0d0;">sudo apt update
 sudo apt install python3</code></pre>
             </li>
             <li>pip 用於安裝各種 Python 套件，先確認有無安裝 pip</li>
             <li>檢查 pip 版本，如果沒有安裝 pip，會出現 command not found: pip
-                <pre><code style="background-color: #f0f0f0;">pip --version</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip --version</code></pre>
             </li>
             <li>安裝 pip
-                <pre><code style="background-color: #f0f0f0;">sudo apt update
+                <pre><code style="background-color: #d0d0d0;">sudo apt update
 sudo apt install python3-pip</code></pre>
             </li>
             <li>要安裝 python 套件時，要在專案目錄下創建一個 Python 虛擬環境</li>
             <li>創建 Python 虛擬環境
-                <pre><code style="background-color: #f0f0f0;">python -m venv ./venv</code></pre>
+                <pre><code style="background-color: #d0d0d0;">python -m venv ./venv</code></pre>
             </li>
             <li>啟動 Python 虛擬環境
-                <pre><code style="background-color: #f0f0f0;">source ./venv/bin/activate</code></pre>
+                <pre><code style="background-color: #d0d0d0;">source ./venv/bin/activate</code></pre>
             </li>
             <li>關閉 Python 虛擬環境
-                <pre><code style="background-color: #f0f0f0;">deactivate</code></pre>
+                <pre><code style="background-color: #d0d0d0;">deactivate</code></pre>
             </li>
             <li>為什麼使用虛擬環境？
                 <ul>
@@ -139,49 +139,49 @@ sudo apt install python3-pip</code></pre>
         <h3>4. 安裝 Ollama 大語言模型(LLM)</h3>
         <ol>
             <li>安裝大語言模型 ollama
-                <pre><code style="background-color: #f0f0f0;">curl -fsSL https://ollama.com/install.sh | sh</code></pre>
+                <pre><code style="background-color: #d0d0d0;">curl -fsSL https://ollama.com/install.sh | sh</code></pre>
             </li>
             <li>跑 gemma:2b 模型
-                <pre><code style="background-color: #f0f0f0;">ollama run gemma:2b</code></pre>
+                <pre><code style="background-color: #d0d0d0;">ollama run gemma:2b</code></pre>
                 第一次執行時，會同時下載模型，如果成功，此時就可以跟模型對話了
             </li>
             <li>ollama list 可列出已經下載的 ollama 模型
-                <pre><code style="background-color: #f0f0f0;">ollama list
-NAME               ID              SIZE      MODIFIED
+                <pre><code style="background-color: #d0d0d0;">ollama list</code></pre>
+                <pre><code style="background-color: #f0f0f0;">NAME               ID              SIZE      MODIFIED
 gemma:2b           b50d6c999e59    1.7 GB    2 days ago
 llama3.2:latest    a80c4f17acd5    2.0 GB    2 days ago
 llama3.2:3b        a80c4f17acd5    2.0 GB    2 days ago</code></pre>
             </li>
             <li>下載 ollama 模型
-                <pre><code style="background-color: #f0f0f0;">ollama pull 模型名稱</code></pre>
+                <pre><code style="background-color: #d0d0d0;">ollama pull 模型名稱</code></pre>
             </li>
             <li>刪除 ollama 模型
-                <pre><code style="background-color: #f0f0f0;">ollama rm 模型名稱</code></pre>
+                <pre><code style="background-color: #d0d0d0;">ollama rm 模型名稱</code></pre>
             </li>
         </ol>
 
         <h3>5. 安裝 Vosk 語音辨識套件(ASR)</h3>
         <ol>
             <li>安裝 vosk 套件
-                <pre><code style="background-color: #f0f0f0;">pip install vosk</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip install vosk</code></pre>
             </li>
             <li>下載中文語言模型
-                <pre><code style="background-color: #f0f0f0;">mkdir vosk_models
+                <pre><code style="background-color: #d0d0d0;">mkdir vosk_models
 cd vosk_models
 wget https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip</code></pre>
             </li>
             <li>解壓縮 vosk-model-small-cn-0.22.zip
-                <pre><code style="background-color: #f0f0f0;">unzip vosk-model-small-cn-0.22.zip</code></pre>
+                <pre><code style="background-color: #d0d0d0;">unzip vosk-model-small-cn-0.22.zip</code></pre>
             </li>
         </ol>
 
         <h3>6. 安裝 Piper-TTS 語音合成套件</h3>
         <ol>
             <li>安裝 piper-tts 套件
-                <pre><code style="background-color: #f0f0f0;">pip install piper-tts</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip install piper-tts</code></pre>
             </li>
             <li>下載中文語音模型及其json
-                <pre><code style="background-color: #f0f0f0;">mkdir piper_models
+                <pre><code style="background-color: #d0d0d0;">mkdir piper_models
 cd piper_models
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx.json</code></pre>
@@ -189,12 +189,12 @@ wget https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/me
             <li>測試 piper 是否正常
                 <ul>
                     <li>執行 piper --help 看看 piper 是否正常，如果正常，則跳過 4
-                    <pre><code style="background-color: #f0f0f0;">piper --help
-Illegal instruction</code></pre>
+                    <pre><code style="background-color: #d0d0d0;">piper --help</code></pre>
+                    <pre><code style="background-color: #f0f0f0;">Illegal instruction</code></pre>
                     出現 Illegal instruction，因為最新版的 onnxruntime 跟 Pi4 的硬體相衝突，要降版本<br>
                     <li>執行 pip show onnxruntime，會顯示 onnxruntime 套件的詳細資訊，包括其版本、安裝位置、依賴套件等<br>
-                    <pre><code style="background-color: #f0f0f0;">pip show onnxruntime
-Name: onnxruntime
+                    <pre><code style="background-color: #d0d0d0;">pip show onnxruntime</code></pre>
+                    <pre><code style="background-color: #f0f0f0;">Name: onnxruntime
 Version: 1.21.0
 Summary: ONNX Runtime is a runtime accelerator for Machine Learning models
 Home-page: https://onnxruntime.ai
@@ -212,18 +212,18 @@ Required-by: piper-tts</code></pre>
             <li>解決 onnxruntime 與硬體相衝突的問題
                 <ol>
                     <li>將 onnxruntime 版本降到 1.17.1
-                        <pre><code style="background-color: #f0f0f0;">pip uninstall onnxruntime -y
+                        <pre><code style="background-color: #d0d0d0;">pip uninstall onnxruntime -y
 pip install onnxruntime==1.17.1</code></pre>
                     </li>
                     <li>onnxruntime 版本降到 1.17.1後，執行 piper --help 會出現問題，這是因為跟 numpy 的版本相衝突，需要將 numpy 降版本</li>
                     <li>將 numpy 版本降到 1.24.4
-                        <pre><code style="background-color: #f0f0f0;">pip uninstall numpy -y
+                        <pre><code style="background-color: #d0d0d0;">pip uninstall numpy -y
 pip install numpy==1.24.4</code></pre>
                     </li>
                 </ol>
             </li>
             <li>測試 piper 語音合成是否正常
-                <pre><code style="background-color: #f0f0f0;">echo '這是測試' | \
+                <pre><code style="background-color: #d0d0d0;">echo '這是測試' | \
 piper --model piper_models/zh_CN-huayan-medium.onnx --output-raw | \
 aplay -r 22050 -f S16_LE -t raw -</code></pre>
                 如果可以聽到"這是測試"，就表示 piper 可以正常工作
@@ -233,16 +233,16 @@ aplay -r 22050 -f S16_LE -t raw -</code></pre>
         <h3>7. 安裝其他需要的 python 套件</h3>
         <ol>
             <li>安裝 sounddevice，用來撥放語音
-                <pre><code style="background-color: #f0f0f0;">pip install sounddevice</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip install sounddevice</code></pre>
             </li>
             <li>安裝 pyaudio，用來錄音
-                <pre><code style="background-color: #f0f0f0;">pip install pyaudio</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip install pyaudio</code></pre>
             </li>
             <li>安裝 Ollama 的 Python API，讓 Python 程式可以透過 ollama API與 Ollama 互動
-                <pre><code style="background-color: #f0f0f0;">pip install ollama</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip install ollama</code></pre>
             </li>
             <li>安裝 opencc，將簡體字轉成繁體字
-                <pre><code style="background-color: #f0f0f0;">pip install opencc-python-reimplemented</code></pre>
+                <pre><code style="background-color: #d0d0d0;">pip install opencc-python-reimplemented</code></pre>
             </li>
         </ol>
 
@@ -428,25 +428,25 @@ if full_response:
             <li>有用的指令
                 <ul>
                     <li>scp（Secure Copy Protocol）是一個基於 SSH（Secure Shell）的安全檔案傳輸工具，允許你在本地與遠端伺服器之間傳輸檔案或目錄。
-                        <pre><code style="background-color: #f0f0f0;">scp file_name user@remote_host:/path/to/destination/</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">scp file_name user@remote_host:/path/to/destination/</code></pre>
                     </li>
                     <li>查看整體磁碟空間 (df)
-                        <pre><code style="background-color: #f0f0f0;">df -h</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">df -h</code></pre>
                     </li>
                     <li>查看目錄空間
-                        <pre><code style="background-color: #f0f0f0;">du -sh 路徑</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">du -sh 路徑</code></pre>
                     </li>
                     <li>顯示 python 套件的詳細資訊
-                        <pre><code style="background-color: #f0f0f0;">pip show 套件名稱</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">pip show 套件名稱</code></pre>
                     </li>
                     <li>安裝特定版本的 python 套件
                         <pre><code style="background-color: #f0f0f0;">pip install 套件名稱==版本號碼</code></pre>
                     </li>
                     <li>查詢 python 套件可用的版本
-                        <pre><code style="background-color: #f0f0f0;">pip index versions 套件名稱</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">pip index versions 套件名稱</code></pre>
                     </li>
                     <li>來列出目前已經安裝在 Python 環境中的所有套件及其版本
-                        <pre><code style="background-color: #f0f0f0;">pip list</code></pre>
+                        <pre><code style="background-color: #d0d0d0;">pip list</code></pre>
                     </li>
                 </ul>
             </li>
