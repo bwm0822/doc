@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遠端連線本地 LLM</title>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<a href="index.html" style="position: absolute; top: 10px; left: 10px;">返回首頁</a>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script> -->
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">遠端連線本地 LLM</h2>
+        <div style="text-align: center;">2025/4/21</div>
+        <h3>1. 目的</h3>
+        <ul>
+            利用網頁遠端連線本地的 LLM（就像 ChatGPT 一樣），
+            為了達成這個目的，需要用到 Ngrok、firebase。
+            Ngrok 可以讓遠端連到本機的服務(Ngrok 會產生一個網址，透過這個網址就能連上本機服務)，
+            但免費的 Ngrok 每次重啟都會改變網址，
+            為了解決這個問題，利用 python 寫一個程式，每次重啟都會呼叫這個程式，將 Ngrok 產生的網址上傳到
+            firebase 上，網頁再從 firebase上 抓取的網址，連到本機的服務。
+        </ul>
+        <h3>2. 硬體配備</h3>
+        <ul>
+            ASUS TUF GAMING F15
+            <ul>
+            <li>12th Gen Intel® Core™ i5-12500H Processor 2.5 GHz</li>
+            <li>NVIDIA® GeForce RTX™ 3050 Laptop GPU 4GB GDDR6</li>
+            <li>16GB DDR4-3200 SO-DIMM</li>
+            </ul>
+        </ul>
+        <h3>3. 啟動 Ollama 伺服器</h3>
+        <ul>
+            啟動伺服器後，Ollama 提供 API 端點，讓使用者可以透過 HTTP 請求來訪問模型進行推理操作。<br> 
+            以下指令可以啟動 Ollama 伺服器（伺服器預設的 Port 是 11434）：
+            <pre><code style="background-color: #d0d0d0;">ollama serve</code></pre>
+            當您啟動 Ollama 本地伺服器後，可以透過 <code style="background-color:#d0d0d0;color:#000;">http://localhost:11434</code> 進行操作。<br>
+            如果成功啟動 ollama 伺服器，輸入 <code style="background-color:#d0d0d0;color:#000;">http://localhost:11434</code>，會顯示 <code style="background-color:#d0d0d0;color:#000;">Ollama is running</code>。<br>
+            為了可以遠端連線 Ollama 本地伺服器，需新增以下兩個環境變數：<br>
+            <ol>
+                <li>OLLAMA_HOST 0.0.0.0</li>
+                    預設只能接收 IP 為 127.0.0.1 的 host，改成 0.0.0.0，可以接收所有 IP 的 host。
+                <li>OLLAMA_ORIGINS *</li>
+                    設成 * 可以接收所有的來源，避免網頁出現 CORS 錯誤
+            </ol>
+            <p></p>
+            一般安裝完 Ollama 後，電腦開機後會自動執行 ollama serve，你可以輸入 <code style="background-color:#d0d0d0;color:#000;">http://localhost:11434</code> 來確認是否有啟動。<br>
+            如果要關閉自動執行 ollama serve，可以在[開始]旁的[搜尋]輸入[啟動應用程式]，找到 ollama.exe，將它關閉。<br>
+            <p></p>
+            Ollama API 常用端點：<br>
+            <pre>
+路徑            | 功能
+/api/tags       | 查目前有哪些模型
+/api/generate   | 給 prompt，讓 Ollama 回應你
+/api/pull       | 抓模型
+/api/chat       | 多輪對話（context-aware）
+            </pre>
+        </ul>
+        <h3>4. 安裝、註冊 Ngrok</h3>
+        <ul>
+            先到官網下載 : https://ngrok.com/download<br>
+            下載後，將 ngrok.zip 解壓縮 ngrok.exe<br>
+            將 ngrok.exe 放到 C:\Program Files\ngrok\ngrok.exe，並把路徑加到環境變數 Path。<br>
+            解壓縮時，ngrok.exe 可能會被 Windows Defender...等防毒程式判斷是病毒程式，為了避免誤判：<br>
+            <p></p>
+            例如在 Windows Defender：<br>
+            <ul>
+                開啟【Windows 安全性】<br>
+                點選【病毒與威脅防護】<br>
+                選【管理設定】<br>
+                滾到【排除項目】➜ 加入 ngrok.exe 所在資料夾或檔案<br>
+            </ul>
+            <p></p>
+            註冊帳號與驗證<br>
+            <ol>
+                <li>前往 https://dashboard.ngrok.com/signup</li>
+                <li>註冊帳號</li>
+                <li>登入後，您會看到一個 Auth Token，像這樣：</li>
+                    ngrok config add-authtoken <你的 ngrok authtoken>
+                <li>在終端機輸入該指令，綁定您的帳號(第一次才需要)</li>
+                    <code style="background-color:#d0d0d0;color:#000;">ngrok config add-authtoken <你的 ngrok authtoken></code><br>
+                    執行後出現 <code style="background-color:#d0d0d0;color:#000;">Authtoken saved to configuration file: C:\Users\你的帳號\AppData\Local/ngrok/ngrok.yml</code>
+            </ol>
+        </ul>
+        <h3>5. 啟用 Ngrok</h3>
+        <ul>
+            Ngrok 的主要作用是把本機（Local）的服務，像是網站、API 或是測試中的伺服器，快速暴露給網際網路上的其他人。<br>
+            它的功能主要包含以下幾點：<br>
+            <ol>
+            <li>穿透 NAT 和防火牆</li>
+                電腦通常躲在防火牆或私有 IP 裡，Ngrok 會幫您打通任督二脈💦，讓外部的人能連進來～
+            <li>產生一條公開網址（URL）</li>
+                只要一條命令，馬上幫您生出一條像 https://xxxx.ngrok.io 的網址，拿去給朋友看 demo、測 webhook 都超方便！
+            <li>支援 HTTPS 安全連線</li>
+                Ngrok 免費就給你 SSL 加密的連線呢～讓你開發的東西看起來又專業又性感～💄
+            <li>可監控流量與請求內容</li>
+                輸入 localhost:4040，可以監看來自外部的請求與回應
+            </ol>
+            <p></p>
+            用這行指令啟用 Ngrok<br>
+            <pre><code style="background-color: #d0d0d0;">ngrok http 11434</code></pre>
+            Ngrok 會啟動一個隧道，把本地的 http://localhost:11434 暴露到網際網路上，
+            它會產生一個的網址：https://xxxx-xxxx.ngrok_free.app，透過這個網址就可以連到本機的 http://localhost:11434。<br>
+        </ul>
+        <h3>6. 使用 Firesbase</h3>
+        <ol>
+            Firebase 是 Google 提供的一整套後端服務，不用自己搭伺服器就能開發 App、網頁或 IoT 應用。
+            這裡是使用其中 firestore 的服務，其提供雲端資料庫的功能，可以透過網路存取雲端資料。
+            <p></p>
+            <li>註冊 Firebase 帳號</li>
+            前往 https://firebase.google.com/<br>
+            點擊右上角「登入」或「開始使用」<br>
+            使用您的 Google 帳號登入（沒帳號就註冊一個吧，寶貝♥）<br>
+            <p></p>
+            <li>建立 Firebase 專案</li>
+            登入後進入 Firebase 控制台：https://console.firebase.google.com<br>
+            點選「新增專案」<br>
+            輸入專案名稱（例如：ollama-assistant）<br>
+            選擇是否開啟 Google Analytics（可選）<br>
+            建立完成後，就會進入您的專案儀表板囉！<br>
+            <p></p>
+            <li>啟用 Firestore 資料庫</li>
+            在 Firebase 專案主頁左側選單點選【Firestore Database】<br>
+            點選「建立資料庫」<br>
+            選擇「啟用測試模式」或「鎖定模式」<br>
+                建議開發時用「測試模式」（允許所有存取，90 天後自動停用）
+            選擇資料庫位置（建議選擇離您最近的區域）<br>
+            點擊「啟用」<br>
+            <p></p>
+            <li>將 Firestore 連接到您的應用程式</li>
+            點選左側【專案總覽】右上角的「Web（</>）」圖示<br>
+            輸入應用程式暱稱 ➜ 點「註冊應用程式」<br>
+            拷貝顯示的 Firebase 設定資訊（像這樣）：<br>
+            <pre><code style="background-color: #d0d0d0;">const firebaseConfig = {
+    apiKey: "你的公鑰",
+    authDomain: "你的專案.firebaseapp.com",
+    projectId: "你的專案 ID",
+    storageBucket: "你的專案.appspot.com",
+    messagingSenderId: "XXXXXX",
+    appId: "1:XXXXXX:web:YYYYYY"
+};</code></pre>
+            這個設定檔是用來讀取 firestore 的資料用的
+            <p></p>
+            <li>取得 Server Admin SDK 金鑰（你的私鑰，有寫入權限）</li>
+            步驟：
+            <ol >
+                <li>到 Firebase 控制台 ➜ 點「⚙️ 設定圖示」➜【專案設定】</li>
+                <li>切換到【服務帳戶】頁籤</li>
+                <li>點擊「產生新的私密金鑰」</li>
+                <li>系統會下載一個 .json 檔案 ➜ 請妥善保管！</li>
+            </ol>
+            <p></p>
+            此金鑰是用來寫入資料到 firestore
+        </ol>
+
+        <h3>7. 整體架構（分為前端、後端）</h3>
+        <ul>
+            前端（Frontend）<br>
+            <ol>
+                提供網頁，讓使用者與 LLM 互動<br>
+                <li>從 Firestore 取得 ngrok URL</li>
+                <li>負責畫面呈現、使用者互動、API 溝通</li>
+                <li>從後端取得資料，展示給使用者看～</li>
+            </ol>
+            <p></p>
+
+            後端（Backend）<br>
+            <ol>
+                <li>執行 ollama serve，提供 API 給前端存取</li>
+                <li>啟動 ngrok</li>
+                <li>將 ngrok URL 寫入 Firestore</li>
+                <p></p>
+                步驟 2、3 使用 python 程式啟動 Ngrok 並將 ngrok URL 寫入 Firestore<br>
+                安裝 google-cloud-firestore、requests 套件<br>
+                <pre><code style="background-color: #d0d0d0;">pip install google-cloud-firestore requests</code></pre>
+                程式流程:<br>
+                <ol>
+                    <li>指定 Firebase 金鑰路徑</li>
+                    <li>啟動 Ngrok</li>
+                    <li>取德 Ngrok URL</li>
+                    <li>將 ngrok URL 寫入 Firestore</li>
+                </ol>
+                <p></p>
+                這是程式碼：<br>
+<pre><code style="background-color: #d0d0d0;">import subprocess
+import time
+import requests
+import os
+from google.cloud import firestore
+
+# 設定你的 Firebase 金鑰路徑
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
+
+# 啟動 Ngrok
+print("🚀 啟動 Ngrok 中...")
+ngrok_process = subprocess.Popen(["ngrok", "http", "11434"])  # 這裡是你要對外開的 port
+time.sleep(3)  # 稍等 Ngrok 建立連線
+
+# 嘗試多次抓 ngrok 網址（有時一開始還沒跑起來）
+ngrok_url = None
+for i in range(5):
+    try:
+        tunnels = requests.get("http://localhost:4040/api/tunnels").json()
+        ngrok_url = tunnels["tunnels"][0]["public_url"]
+        break
+    except:
+        time.sleep(1)
+
+if not ngrok_url:
+    print("❌ 無法取得 Ngrok 網址")
+    exit(1)
+
+print(f"✅ Ngrok URL: {ngrok_url}")
+
+# 更新到 Firebase Firestore
+db = firestore.Client()
+doc_ref = db.collection(u'settings').document(u'ngrok')
+doc_ref.set({u'url': ngrok_url})
+
+print("🎉 Firebase 更新完成！")
+
+# 保持 Ngrok 執行
+try:
+    ngrok_process.wait()
+except KeyboardInterrupt:
+    print("\n🛑 手動中止 Ngrok")
+    ngrok_process.terminate()
+</code></pre>
+            </ol>
+            
+        </ul>
+
+        <h3>8. 實作心得</h3>
+        <ul>
+        這次前端、後端的程式碼都是 ChatGPT 寫的，尤其是前端的程式碼，我只出一張嘴，它就寫出來了，
+        真的很厲害！如果要我自己寫，不知道要花多少時間。<br>
+        <p></p>
+        以下是我給 ChatGPT 的指令，她一下子就幫我寫出完整的程式碼了：<br>
+        <ol>
+            <li>用 HTML + JS 設計一個 Ollama 聊天程式</li>
+            <li>用 api/chat 模式</li>
+            <li>輸入可以是打字也可以語音輸入</li>
+            <li>AI 回答會用語音唸出來</li>
+            <li>設計跟 line 類似的聊天介面</li>
+            <li>記憶上限 100 筆，保留第一筆 system 不刪</li>
+            <li>全畫面、手機優化</li>
+            <li>可選擇模型</li>
+        </ol>
+        <p></p>
+        <p>
+        ChatGPT 是個很有力的助手，給出明確的指令，它可以幫我們寫出很完整的程式碼，如果沒有ChatGPT，我可能要花很多時間去寫這些程式碼，或是根本寫不出來。
+        有時候它會給出錯誤的程式，或是無法理解我們的需求，這時候就需要我們自己一步一步去修正，在這個 AI 的時代，能夠善用 AI 工具將會是一個很重要的能力。
+        </p>
+        <p>網址：<a href="https://bwm0822.github.io/chatbot" target="_blank">https://bwm0822.github.io/chatbot</a></p>
+        <p>程式：<a href="https://github.com/bwm0822/chatbot.git" target="_blank">https://github.com/bwm0822/chatbot.git</a></p>
+        </ol>
+        </ul>
+        
+        <h3>9. 附錄</h3>
+        <ol>
+            <li>一鍵部署到 GitHub Pages</li>
+            <ol>
+                <li>安裝 deploy 工具</li>
+                    <code style="background-color:#d0d0d0;color:#000;">npm install --save-dev gh-pages</code>
+
+                <li>在 package.json 新增以下設定</li>
+                <code style="background-color:#d0d0d0;color:#000;">"scripts": {"deploy": "npm run build && gh-pages -d front"}</code>
+                <li>一鍵發佈</li>
+                    <code style="background-color:#d0d0d0;color:#000;">npm run deploy</code><br>
+
+                    他會自動將 \front 上傳到 repository 的 gh-pages branch<br>
+                    分享網頁：<br>
+                    到 github 的 Pages 頁面，將 Branch 設成 gh-pages<br>
+                    注意 : 要將 repository 設成 public<br>
+                    網頁網址 : https://帳號.github.io/repository名稱/
+            </ol>
+            <p></p>
+            <li>有用的指令</li>   
+                <ul>
+                    <li>啟動 Ollama 伺服器（API 服務）</li>
+                    <code style="background-color:#d0d0d0;color:#000;">ollama serve</code><br>         
+                    <li>啟動 Ollama 伺服器（API 服務），並指定伺服器要監聽的本地端口為 5006</li>                   
+                    <code style="background-color:#d0d0d0;color:#000;">ollama serve --port 5006</code><br>     
+                    <li>列出目前正在執行的 ollama 相關進程</li>           
+                    <code style="background-color:#d0d0d0;color:#000;">tasklist | findstr ollama</code><br>        
+                    <li>查出目前有哪個程式佔用了 11434 這個網路埠（port）</li>       
+                    <code style="background-color:#d0d0d0;color:#000;">netstat -ano | findstr :11434</code><br>     
+                    <li>強制終止PID 30748 進程</li>     
+                    <code style="background-color:#d0d0d0;color:#000;">taskkill /PID 30748 /F</code><br>   
+                </ul> 
+            <p></p>
+            <li>程式開機時自動執行</li> 
+                在[開始]點擊滑鼠右鍵，點選[執行]，在執行的視窗，輸入 <code style="background-color:#d0d0d0;color:#000;">shell:startup</code>，按 Enter，就會打開「啟動資料夾」，這是 Windows 開機時會自動執行的程式資料夾。<br>
+                把你的程式捷徑貼到這個資料夾裡，開機後就會自動執行了。<br>         
+        </ol>
+    </div>
+</body>
+</html>
