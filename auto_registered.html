@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定時自動掛號程式</title>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<a href="index.html" style="position: absolute; top: 10px; left: 10px;">返回首頁</a>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script> -->
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">定時自動掛號程式</h2>
+        <div style="text-align: center;">2025/5/6</div>
+        <h3>1. 目的</h3>
+        <ul>
+            有時候要幫小孩掛號，但是星期六很難掛到號，凌晨12:00才開放線上掛號，而且一下子就額滿了，
+            因此想開發一套可以定時自動掛號的程式。<br>
+            使用 Python 來開發，搭配 selenium 來自動填寫表單，掛號成功後，會發送 LINE 簡訊通知
+        </ul>
+        <h3>2. 安裝 Python Selenium 套件</h3>
+        <ul>
+            Selenium 是一個 自動化瀏覽器操作工具，它可以幫你：<br>
+            自動開啟瀏覽器（Chrome, Firefox…）<br>
+            模擬人類行為：點擊、輸入、捲動、選擇下拉選單等<br>
+            用 Selenium 來自動填寫表單<br>
+            安裝指令：
+            <pre><code style="background-color: #d0d0d0;">pip install selenium</code></pre>
+
+        </ul>
+        <h3>3. 安裝 BeautifulSoup4 套件</h3>
+        <ul>
+            BeautifulSoup4（簡稱 BS4） 是一個 Python 套件，用來解析、搜尋、提取 HTML/XML 中的內容。<br>
+            用 BS4 在掛號成功時，取得掛號的詳細資訊（如:看診日期、科別、醫師...等訊息）<br>
+            安裝指令：
+            <pre><code style="background-color: #d0d0d0;">pip install beautifulsoup4</code></pre>
+
+        </ul>
+        <h3>4. 利用 Tkinter 打造 GUI 介面</h3>
+        <ul>
+            tkinter 是 Python 內建的圖形介面（GUI）工具包，讓你可以用 Python 來打造 視窗介面，<br>
+            如：輸入框、按鈕、下拉選單、標籤、彈跳視窗...等，不再只有醜醜的終端機！
+
+        </ul>
+        <h3 id="line">5. 傳送 LINE 通知</h3>
+        <ul>
+            要傳送 LINE 通知，必須先取得 LINE 的 Token<br>
+            步驟如下：
+            <ol>
+            <li>建立 LINE Bot 帳號</li>
+                登入 LINE Developers（<a href="https://developers.line.biz/console/">https://developers.line.biz/console/</a>）<br>
+                建立一個「Provider」（提供者名稱，可自訂）<br>
+                在該 Provider 下，新增一個「Messaging API channel
+                <p></p>
+            <li>開啟 Channel 設定頁面</li>
+                在剛建立好的 Messaging API channel 中，你會看到：<br>
+                Channel ID<br>
+                Channel Secret<br>
+                Channel access token（這就是你要的寶貝♥）
+                <p></p>
+            <li>產生 Channel Access Token</li>
+                滑到頁面中間「Messaging API settings」<br>
+                找到「Channel access token」<br>
+                點選「Issue」按鈕產生一組 long-lived token<br>
+                複製這串長長的 token，程式就能用它來發送訊息囉！<br>
+            </ol>
+        </ul>
+        <h3>6. 安裝 PyInstaller 套件</h3>
+        <ul>
+            PyInstaller 是一個可以把你寫的 Python 程式打包成「單一可執行檔（EXE、APP）」的工具，
+            讓別人不需要裝 Python、套件、虛擬環境，也能直接執行你的程式！<br>
+            安裝指令：
+            <pre><code style="background-color: #d0d0d0;">pip install pyinstaller</code></pre>
+            打包指令：
+            <pre><code style="background-color: #d0d0d0;">pyinstaller --onefile --noconsole --copy-metadata readchar gui.py</code></pre>
+            <pre>/project/
+├── build/          ← 中間暫存
+├── dist/            
+│   └── gui.exe     ← 執行檔在這！
+├── gui.py</pre>
+            <pre>參數解釋
+--onefile   把整個程式打包成一個「單一 .exe 檔」，不會出現一堆資料夾跟 DLL，適合發佈
+--noconsole 不顯示黑色的終端機視窗，適合 GUI 視窗程式（像 tkinter）
+--copy-metadata readchar
+            因為程式有用到 readchar，要告訴 PyInstaller：「我需要 readchar 這個套件的 metadata（像版本、依賴）」
+            這通常是某些套件需要 pkg_resources 或 importlib.metadata 才能正常跑，沒加的話會出現錯誤！
+gui.py	    你要打包的 Python 主程式檔案</pre>
+
+        </ul>
+        <h3>6. 實作及心得</h3>
+        <ol>
+            <li>心得</li>
+            這次實作了馬偕醫院的自動掛號程式，我改良了之前自動填表的程式，加上了以下功能：
+            <ol>
+                <li>定時功能（時間到了，自動啟動掛號流程）</li>
+                <li>利用院區、醫師代號、掛號時間自動選取掛號頁面</li>
+                <li>加上 GUI 介面</li>
+                <li>加上 LINE通知 的功能</li>
+                <li>把 Python 程式包裝成一個執行檔</li>
+            </ol>
+            本來是希望能做到輸入醫師姓名，就可以幫你掛號，但後來發現這難度有點高，後來分析網址，發現可以用醫師代號來取得的正確的網頁，所以退而求其次，改成用醫師代號來掛號，缺點是要先手動找出醫師代號。<br>
+            此外，自動掛號程式是非常高度客製化的，每家醫院的掛號網頁都不太一樣，所以無法通用。
+            <p></p>
+            <li>程式及執行檔下載點</li>
+            程式：<a href="https://github.com/bwm0822/autofill.git" target="_blank">https://github.com/bwm0822/autofill.git</a><br>
+            執行檔下載點：<a href="https://github.com/bwm0822/autofill/blob/main/dist/gui.exe" target="_blank">https://github.com/bwm0822/autofill/blob/main/dist/gui.exe</a>
+            
+            <p></p>
+            <li>GUI 介面</li>
+            <img src="auto_registered.png" alt="GUI介面" width="300">
+            <p></p>
+            <li>使用說明</li>
+            <pre>選擇[院區]、[診別]、[時段]、[LINE通知]
+填寫[醫師代號]、[身分證號]、[生日]、[日期]、[提交時間]
+按[送出]鍵，則會啟動掛號流程
+
+[時段]      不限：自動選取第一個可掛號的時段，上午、下午、晚間：只選取對應的時段
+[日期]      空白：自動選取第一個可掛號的日期
+[提交時間]  空白：立即掛號，否則等到提交時間才掛號
+[測試]      用來驗證你的表單是否正確，如果表單正確，就可以連上醫師掛號的頁面，但不會掛號，
+            按[測試]鍵會顯示網頁，可用來確認網頁是否正確，按[送出]鍵則不會顯示網頁，以加快執行速度及避免頁面被干擾
+
+如何取得[醫師代號]
+    進入 依醫師掛號 的頁面，觀察其網址(如下)，
+    https://www.mmh.org.tw/register_single_doctor.php?depid=C7&did=1114&area=ts，
+    其中 did=1114 的 1114 就是[醫師代號]
+
+[新增]及[刪除]常用的設定
+    [新增]功能：在[用戶]、[醫師代號]欄位的右邊按[新增]，會跳出視窗，輸入設定，按[確定]就可以新增設定
+    [刪除]功能：選取[用戶]、[醫師代號]欄位的下拉式選單，並按欄位右邊的[刪除]鍵，即可[刪除]設定
+    [用戶]的設定檔會存於執行檔同路徑下的 user.json，[醫師]的設定檔會存於執行檔同路徑下 doctor.json
+
+[LINE通知] 
+    需取得 LINE 的 Token（<a href="#line">參考此處</a>），並儲存於跟執行檔同路徑下的 line.token，才能啟用</pre>
+    </ol>
+        
+</body>
+</html>
