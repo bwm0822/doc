@@ -102,13 +102,33 @@ gui.py	    你要打包的 Python 主程式檔案</pre>
                 <li>加上 LINE通知 的功能</li>
                 <li>把 Python 程式包裝成一個執行檔</li>
             </ol>
-            本來是希望能做到輸入醫師姓名，就可以幫你掛號，但後來發現這難度有點高，後來分析網址，發現可以用醫師代號來取得的正確的網頁，所以退而求其次，改成用醫師代號來掛號，缺點是要先手動找出醫師代號。<br>
+            本來是希望能做到輸入醫師姓名，就可以幫你掛號，但發現這難度有點高，後來分析網址，發現可以用醫師代號來取得的正確的網頁，所以退而求其次，改成用醫師代號來掛號，缺點是要先手動找出醫師代號。<br>
             此外，自動掛號程式是非常高度客製化的，每家醫院的掛號網頁都不太一樣，所以無法通用。
             <p></p>
-            <li>程式及執行檔下載點</li>
-            程式：<a href="https://github.com/bwm0822/autofill.git" target="_blank">https://github.com/bwm0822/autofill.git</a><br>
-            執行檔下載點：<a href="https://github.com/bwm0822/autofill/blob/main/dist/gui.exe" target="_blank">https://github.com/bwm0822/autofill/blob/main/dist/gui.exe</a><br>
-            下載的執行檔可能會被 Microsoft Defender SmartScreen 攔截，點擊[其他資訊]，再點擊[仍要執行]，即可執行
+
+            <li>如何取得[醫師代號]</li>
+            進入你要掛號醫師的 依醫師掛號 的頁面，觀察其網址（如下），<br>
+            https://www.mmh.org.tw/register_single_doctor.php?depid=C7&did=1114&area=ts，<br>
+            其中 did=1114 的 1114 就是[醫師代號]
+            <p></p>  
+
+            <li>專案及執行檔下載點</li>
+                專案網址：<a href="https://github.com/bwm0822/autofill.git" target="_blank">https://github.com/bwm0822/autofill.git</a><br>
+                將專案下載後，依照以下步驟，就可以產生一個可執行檔（gui.exe）<br>
+                <ol>
+                    <li>進入專案目錄</li>
+                    <li>建立 Python 虛擬環境</li>
+                    <pre><code style="background-color: #d0d0d0;">python -m venv ./venv</code></pre>
+                    <li>啟動 Python 虛擬環境</li>
+                    <pre><code style="background-color: #d0d0d0;">.\venv\Scripts\activate</code></pre>
+                    <li>安裝相關套件</li>
+                    <pre><code style="background-color: #d0d0d0;">pip install -r requirements.txt</code></pre>
+                    <li>將程式打包為一個執行檔，執行檔會放在 \dist\gui.exe</li>
+                    <pre><code style="background-color: #d0d0d0;">pyinstaller --onefile --noconsole --copy-metadata readchar gui.py</code></pre>
+                </ol>
+                <p></p>
+                執行檔下載點：<a href="https://github.com/bwm0822/autofill/blob/main/dist/gui.exe" target="_blank">https://github.com/bwm0822/autofill/blob/main/dist/gui.exe</a><br>
+                下載的執行檔可能會被 Microsoft Defender SmartScreen 攔截，點擊[其他資訊]，再點擊[仍要執行]，即可執行
             
             <p></p>
             <li>GUI 介面</li>
@@ -125,11 +145,6 @@ gui.py	    你要打包的 Python 主程式檔案</pre>
 [測試]      用來驗證你的表單是否正確，如果表單正確，就可以連上醫師掛號的頁面，但不會掛號，
             按[測試]鍵會顯示網頁，可用來確認網頁是否正確，按[送出]鍵則不會顯示網頁，以加快執行速度及避免頁面被干擾
 
-如何取得[醫師代號]
-    進入 依醫師掛號 的頁面，觀察其網址(如下)，
-    https://www.mmh.org.tw/register_single_doctor.php?depid=C7&did=1114&area=ts，
-    其中 did=1114 的 1114 就是[醫師代號]
-
 [新增]及[刪除]常用的設定
     [新增]功能：在[用戶]、[醫師代號]欄位的右邊按[新增]，會跳出視窗，輸入設定，按[確定]就可以新增設定
     [刪除]功能：選取[用戶]、[醫師代號]欄位的下拉式選單，並按欄位右邊的[刪除]鍵，即可[刪除]設定
@@ -137,7 +152,11 @@ gui.py	    你要打包的 Python 主程式檔案</pre>
 
 [LINE通知] 
     需取得 LINE 的 Token（<a href="#line">參考此處</a>），並儲存於跟執行檔同路徑下的 line.token，才能啟用</pre>
-    </ol>
+        
+        
+
+        </ol>
+    
         
 </body>
 </html>
